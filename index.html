@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직류전력변환공학 — 컨버터 퀴즈</title>
+<style>
+  :root{
+    --bg:#F5F5F7; --card:#FFFFFF; --ink:#1D1D1F; --sub:#6E6E73;
+    --accent:#0066CC; --accent-soft:#E8F1FB;
+    --ok:#1B8A4C; --ok-soft:#E6F4EC;
+    --no:#D93025; --no-soft:#FCEAE8;
+    --warn:#B25E00; --warn-soft:#FFF4E0;
+    --hair:#E3E3E8; --radius:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:28px 16px 60px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%; max-width:680px;}
+
+  .top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px;}
+  .top h1{font-size:17px; font-weight:700; letter-spacing:-0.3px;}
+  .top h1 span{color:var(--accent);}
+  .top .count{font-size:13px; color:var(--sub); font-variant-numeric:tabular-nums;}
+
+  .bar{height:4px; background:var(--hair); border-radius:2px; overflow:hidden; margin-bottom:26px;}
+  .bar i{display:block; height:100%; width:0%; background:var(--accent); border-radius:2px; transition:width .35s cubic-bezier(.4,0,.2,1);}
+
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--hair);
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+    padding:30px 28px; animation:rise .3s ease;
+  }
+  @keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion:reduce){ .card{animation:none;} .bar i{transition:none;} }
+
+  .meta{display:flex; gap:8px; align-items:center; margin-bottom:16px;}
+  .badge{font-size:11.5px; font-weight:700; letter-spacing:.4px; padding:4px 10px; border-radius:999px;}
+  .badge.ox{background:var(--accent-soft); color:var(--accent);}
+  .badge.short{background:var(--ok-soft); color:var(--ok);}
+  .badge.essay{background:#F0E9FB; color:#6B3FA0;}
+  .qno{font-size:12.5px; color:var(--sub); font-variant-numeric:tabular-nums;}
+  .backTop{
+    margin-left:auto; background:none; border:none; cursor:pointer; font-family:inherit;
+    font-size:13px; font-weight:600; color:var(--sub); padding:4px 8px; border-radius:8px;
+    transition:color .12s, background .12s;
+  }
+  .backTop:hover{color:var(--accent); background:var(--accent-soft);}
+  .backTop:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+
+  .qtext{font-size:19px; line-height:1.55; font-weight:600; letter-spacing:-0.2px; white-space:pre-line; margin-bottom:26px;}
+
+  .oxrow{display:flex; gap:14px; justify-content:center; margin:6px 0 4px;}
+  .oxbtn{
+    width:120px; height:120px; border-radius:28px; border:1.5px solid var(--hair);
+    background:var(--bg); font-size:52px; font-weight:300; cursor:pointer;
+    transition:transform .12s ease, border-color .12s, background .12s, color .12s;
+    color:var(--sub); font-family:inherit;
+  }
+  .oxbtn:not(:disabled):hover{transform:translateY(-3px);}
+  .oxbtn.o:not(:disabled):hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+  .oxbtn.x:not(:disabled):hover{border-color:var(--no); color:var(--no); background:var(--no-soft);}
+  .oxbtn:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .oxbtn:disabled{cursor:default;}
+  .oxbtn.picked-right{border-color:var(--ok); background:var(--ok-soft); color:var(--ok);}
+  .oxbtn.picked-wrong{border-color:var(--no); background:var(--no-soft); color:var(--no);}
+  .oxbtn.dim{opacity:.35;}
+  .hint{font-size:12px; color:var(--sub); text-align:center; margin-top:14px;}
+
+  .btn{
+    font-family:inherit; font-size:15px; font-weight:600; border:none; cursor:pointer;
+    border-radius:12px; padding:13px 22px; transition:filter .12s, transform .12s;
+  }
+  .btn:hover{filter:brightness(1.06); transform:translateY(-1px);}
+  .btn:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-ghost{background:var(--bg); color:var(--ink); border:1px solid var(--hair);}
+  .gradeRow{display:flex; gap:10px; margin-top:16px;}
+  .gradeRow .btn{flex:1;}
+  .btn-ok{background:var(--ok-soft); color:var(--ok);}
+  .btn-no{background:var(--no-soft); color:var(--no);}
+
+  .answerBox{margin-top:4px; border-top:1px solid var(--hair); padding-top:20px; animation:rise .25s ease;}
+  .answerBox .label{font-size:11.5px; font-weight:700; letter-spacing:1px; color:var(--accent); margin-bottom:8px;}
+  .answerBox .ans{font-size:16.5px; font-weight:600; line-height:1.6; white-space:pre-line; margin-bottom:14px;}
+  .answerBox .exp{font-size:14.5px; line-height:1.7; color:var(--sub); white-space:pre-line;}
+  .flag{margin-top:14px; background:var(--warn-soft); color:var(--warn); border-radius:10px; padding:11px 14px; font-size:13.5px; line-height:1.6;}
+
+  .verdict{display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; margin:18px 0 14px;}
+  .verdict.right{color:var(--ok);} .verdict.wrong{color:var(--no);}
+  .myGrade{font-size:13.5px; font-weight:600; margin-top:14px;}
+  .myGrade.right{color:var(--ok);} .myGrade.wrong{color:var(--no);}
+
+  .navRow{display:flex; gap:10px; margin-top:22px;}
+  .navRow .btn-primary{flex:1;}
+
+  .center{text-align:center;}
+  .startTitle{font-size:26px; font-weight:800; letter-spacing:-0.5px; margin-bottom:8px;}
+  .startSub{font-size:14.5px; color:var(--sub); line-height:1.6; margin-bottom:30px;}
+  .modeGrid{display:flex; flex-direction:column; gap:10px; margin-bottom:18px;}
+  .modeBtn{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--bg); border:1.5px solid var(--hair); border-radius:14px;
+    padding:16px 20px; cursor:pointer; font-family:inherit; font-size:15.5px; font-weight:600;
+    transition:border-color .12s, background .12s; text-align:left; color:var(--ink);
+  }
+  .modeBtn:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .modeBtn:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .modeBtn small{font-weight:500; color:var(--sub); font-size:12.5px;}
+  .toggleRow{display:flex; justify-content:center; align-items:center; gap:8px; font-size:14px; color:var(--sub);}
+  .toggleRow input{width:18px; height:18px; accent-color:var(--accent); cursor:pointer;}
+  .note{font-size:12.5px; color:var(--sub); text-align:center; margin-top:18px; line-height:1.6;}
+
+  .scoreBig{font-size:54px; font-weight:800; letter-spacing:-1.5px; margin:6px 0 2px;}
+  .scoreBig small{font-size:20px; font-weight:600; color:var(--sub);}
+  .resultMsg{font-size:15px; color:var(--sub); margin-bottom:26px;}
+  .wrongList{text-align:left; margin:0 0 24px; padding:0; list-style:none;}
+  .wrongList li{
+    font-size:14px; line-height:1.5; padding:11px 14px; border:1px solid var(--hair);
+    border-radius:10px; margin-bottom:8px; background:var(--bg); color:var(--ink);
+  }
+  .wrongList li b{color:var(--no); margin-right:6px;}
+  .resultBtns{display:flex; flex-direction:column; gap:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>직류전력변환공학 <span>· 컨버터 퀴즈</span></h1>
+    <div class="count" id="counter"></div>
+  </div>
+  <div class="bar"><i id="progress"></i></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   OX 문제는 variants 배열에서 매 라운드 랜덤 1개 출제.
+   O가 답인 버전 / X가 답인 버전을 섞어놨음.
+───────────────────────────────────────────── */
+const QUESTIONS = [
+ {n:1, type:'short',
+  q:'부하 크기에 따른 동작 모드를 연결하시오.\n경부하 (부하 작다, R 크다) → ?\n중부하 (부하 크다, R 작다) → ?',
+  a:'경부하 → DCM\n중부하 → CCM',
+  exp:'K = 2L/(R·Ts)를 K_crit과 비교. 부하가 작으면 R이 커져서 K가 작아지고 → DCM. 부하가 크면 R이 작아 K가 커지고 → CCM.',
+  flag:'⚠️ 원본 노트에는 "경부하–CCM / 중부하–DCM"으로 적혀 있는데, 표준 이론과 반대라 필기 오기일 가능성이 높음. 교수님 자료로 꼭 확인할 것.'},
+
+ {n:2, type:'ox',
+  exp:'이상적으로는 게인이 1/(1−D)로 무한히 커지지만, 실제로는 인덕터 ESR 등 기생저항 때문에 D가 1에 가까워질수록 게인이 꺾이고 효율이 떨어진다. (ideal vs real 곡선)',
+  variants:[
+    {q:'Boost 컨버터는 실제로는 D를 키울수록 효율이 항상 떨어진다.', a:'O'},
+    {q:'실제 Boost 컨버터는 D를 1에 가깝게 키우면 게인이 무한히 커진다.', a:'X'},
+    {q:'실제 Boost 컨버터의 게인은 기생저항 때문에 D가 클 때 이상적 게인보다 낮아진다.', a:'O'},
+    {q:'이상적인 Boost 게인 식 1/(1−D)는 실제 회로에서도 D 전 구간에서 그대로 성립한다.', a:'X'}
+  ]},
+
+ {n:3, type:'ox',
+  exp:'Buck-Boost의 출력 극성은 D와 무관하게 항상 반전(−)이다. D에 따라 바뀌는 건 출력 전압의 크기(승압/강압)뿐.',
+  variants:[
+    {q:'Buck-Boost에서 Duty 값에 따라 출력의 극성이 바뀔 수 있다.', a:'X'},
+    {q:'Buck-Boost의 출력 극성은 D와 무관하게 항상 반전이다.', a:'O'},
+    {q:'Buck-Boost에서 D < 0.5이면 비반전, D > 0.5이면 반전 출력이 나온다.', a:'X'},
+    {q:'Buck-Boost에서 D에 따라 바뀌는 것은 출력 전압의 크기이지 극성이 아니다.', a:'O'}
+  ]},
+
+ {n:4, type:'ox',
+  exp:'K = 2L/(R·Ts) = 2Lf/R 이므로 f나 L을 키우면 K가 커져 CCM으로 간다. (모든 DC-DC 컨버터에 적용)',
+  flag:'노트 글씨가 "높여야/낮춰야" 애매했는데 답이 O로 박혀 있어서 이론(높인다 = O) 기준으로 정리함.',
+  variants:[
+    {q:'CCM으로 동작시키려면 스위칭 주파수를 높여야 한다.', a:'O'},
+    {q:'CCM으로 동작시키려면 스위칭 주파수를 낮춰야 한다.', a:'X'},
+    {q:'CCM으로 동작시키려면 인덕턴스를 높여야 한다.', a:'O'},
+    {q:'CCM으로 동작시키려면 인덕턴스를 낮춰야 한다.', a:'X'}
+  ]},
+
+ {n:5, type:'ox',
+  exp:'SEPIC은 비반전 출력, Cuk은 반전 출력. 이 둘은 세트로 헷갈리게 내기 좋은 포인트.',
+  variants:[
+    {q:'SEPIC은 출력이 반전되어 나온다.', a:'X'},
+    {q:'SEPIC은 출력이 반전되지 않는다 (비반전이다).', a:'O'},
+    {q:'Cuk 컨버터는 출력이 반전되어 나온다.', a:'O'},
+    {q:'Cuk과 SEPIC 모두 출력이 반전된다.', a:'X'}
+  ]},
+
+ {n:6, type:'essay',
+  q:'Cuk과 SEPIC의 EMI(리플) 제어 측면 차이점은?',
+  a:'Cuk: 입력·출력 양쪽에 인덕터가 있어 입출력 전류가 모두 연속 → 양쪽 리플/EMI가 작다. (단, 출력 반전)\nSEPIC: 입력은 인덕터로 연속이지만 출력측 전류는 펄스형 → 출력 리플이 더 크다. (대신 비반전)',
+  exp:'EMI 필터 설계 관점에서 Cuk이 양방향 모두 유리, SEPIC은 출력 캐패시터 부담이 더 큼.'},
+
+ {n:7, type:'essay',
+  q:'Interleaved 컨버터에서 각 스위치가 켜졌다 꺼지는 타이밍이 겹치면 어떻게 되나?',
+  a:'ON 타이밍이 겹치면 리플이 증가한다.\n위상이 제대로 엇갈려 겹치지 않으면 리플이 상쇄되어 출력 리플이 감소(drop)한다.',
+  exp:'Interleaving의 핵심 목적이 위상차를 통한 리플 상쇄 + 전류 분담이므로, 타이밍이 겹치면 그 효과를 잃는다.'},
+
+ {n:8, type:'ox',
+  exp:'동기 정류(synchronous rectification) 개념. 다이오드의 순방향 전압강하(~0.7V) 대신 MOSFET의 작은 R_DS(on)으로 도통시키면 도통 손실이 크게 줄어든다.',
+  variants:[
+    {q:'Active(능동) 소자인 스위치는 Passive(수동) 소자인 Diode보다 손실이 작고 성능이 우수하다.', a:'O'},
+    {q:'다이오드는 MOSFET 동기정류보다 도통 손실이 작다.', a:'X'},
+    {q:'동기 정류(다이오드를 능동 스위치로 대체)는 도통 손실을 줄일 수 있다.', a:'O'},
+    {q:'수동 소자인 다이오드가 능동 스위치보다 손실 측면에서 우수하다.', a:'X'}
+  ]},
+
+ {n:9, type:'ox',
+  exp:'노트 기준 t_on > t_off (O). 턴온 과정에는 다이오드 역회복(reverse recovery) 등이 겹쳐 전환 시간과 손실(Eon)이 더 커지는 경향이 있다.',
+  flag:'근거가 노트에 명시돼 있지 않아 "노트 기준" 답임. 교수님이 어떤 소자/맥락으로 설명했는지 확인 권장.',
+  variants:[
+    {q:'일반적으로 t_on이 t_off보다 크다.', a:'O'},
+    {q:'일반적으로 t_off가 t_on보다 크다.', a:'X'}
+  ]},
+
+ {n:10, type:'ox',
+  exp:'Eon, Eoff는 스위칭(switching) 손실을 대표하는 값. 도통 손실은 도통 중 전압강하 × 전류(또는 I²·R_DS(on))로 결정된다.',
+  variants:[
+    {q:'Eon, Eoff는 conduction loss를 대표하는 값이다.', a:'X'},
+    {q:'Eon, Eoff는 switching loss를 대표하는 값이다.', a:'O'},
+    {q:'도통 손실(conduction loss)의 크기는 Eon, Eoff로 평가한다.', a:'X'},
+    {q:'스위칭 손실은 턴온/턴오프 전환 구간의 에너지 Eon, Eoff로 평가한다.', a:'O'}
+  ]},
+
+ {n:11, type:'short',
+  q:'스위칭 주파수 f가 올라가면 CCM으로 가나, DCM으로 가나?',
+  a:'CCM',
+  exp:'K = 2L/(R·Ts) = 2Lf/R. f가 커지면 K가 커져 CCM 쪽으로 간다. (모드를 결정하는 변수: L, R, f)'},
+
+ {n:12, type:'essay',
+  q:'DCM의 장점은? 그리고 그 한계는? (스위칭 손실 관점)',
+  a:'전류가 0인 상태에서 턴온하므로 Eon ≈ 0 → 스위칭 손실이 대체로 개선된다.\n단, 피크 전류가 커져서 Eoff는 증가한다.\n이 장점이 큰 영향을 못 주는 조건이라면 CCM이 더 낫다.',
+  exp:'DCM은 도통 손실(피크 전류↑, RMS↑)에서 불리하므로 항상 좋은 게 아니다. 손실 trade-off로 판단.'},
+
+ {n:13, type:'ox',
+  exp:'예: Buck의 K_crit = 1−D 이므로 D가 커지면 K_crit이 작아져 CCM 영역으로 들어간다. DCM에서는 부하가 가벼울수록 게인이 커져 같은 D에서 CCM 게인보다 높게 나온다.',
+  variants:[
+    {q:'Duty가 증가할수록 CCM으로 간다.', a:'O'},
+    {q:'Duty가 증가할수록 DCM으로 간다.', a:'X'},
+    {q:'같은 D에서 DCM 구간의 게인(전압)은 CCM보다 높게 나온다.', a:'O'},
+    {q:'같은 D에서 DCM 구간의 게인(전압)은 CCM보다 낮게 나온다.', a:'X'}
+  ]},
+
+ {n:14, type:'essay',
+  q:'Flyback에서 실제로는 Duty를 0.2 < D < 0.8 범위 밖에서 못 쓰는 이유는?',
+  a:'D가 극단적으로 크거나 작으면 스위치에 흐르는 피크 전류가 커지고, 소자에 걸리는 전압 스트레스도 커진다.\n→ 소자 부담과 손실이 커져 효율이 떨어지기 때문.',
+  exp:'권선비로 정격을 맞출 수 있으므로 D를 극단까지 끌고 갈 이유가 없고, 실무에서는 중간 영역에서 설계한다.'},
+
+ {n:15, type:'ox',
+  exp:'에너지 저장·전달은 자화 인덕턴스(Lm)가 담당한다. 누설 인덕턴스는 기생 성분으로 전압 스파이크와 손실을 유발하며, 스너버로 처리해야 하는 골칫거리다.',
+  variants:[
+    {q:'Flyback 컨버터는 leakage 인덕턴스가 있어야 하며, leakage를 통해 에너지를 전달한다.', a:'X'},
+    {q:'Flyback의 에너지 저장·전달은 자화 인덕턴스(Lm)가 담당한다.', a:'O'},
+    {q:'Flyback에서 누설 인덕턴스는 동작에 꼭 필요한 설계 요소다.', a:'X'},
+    {q:'Flyback에서 누설 인덕턴스는 전압 스파이크를 유발하는 기생 성분이다.', a:'O'}
+  ]},
+
+ {n:16, type:'ox',
+  exp:'CCM 게인은 권선비와 D로만 결정돼 f와 무관하지만, DCM 게인 식에는 f가 들어간다. 따라서 "주파수와 상관없다"는 틀린 말.',
+  variants:[
+    {q:'Flyback 컨버터의 게인은 주파수와 상관없다.', a:'X'},
+    {q:'Flyback의 DCM 게인 식에는 스위칭 주파수 f가 들어간다.', a:'O'},
+    {q:'Flyback의 CCM 게인은 스위칭 주파수와 무관하다.', a:'O'},
+    {q:'Flyback은 CCM, DCM 모두 게인이 주파수에 의존한다.', a:'X'}
+  ]},
+
+ {n:17, type:'essay',
+  q:'Flyback / Forward 컨버터는 왜 고용량(대용량) 응용에 못 쓰나?',
+  a:'변압기가 인덕터처럼 에너지를 저장해야 해서, 용량이 커지면 코어가 커져야 한다.\n코어가 커지면 무겁고 비싸지기 때문.',
+  exp:'특히 Flyback은 변압기(결합 인덕터)에 에너지를 통째로 저장했다 내보내는 구조라 코어 부담이 크다. 대용량은 Push-pull, Half/Full-bridge 계열로 간다.'},
+
+ {n:18, type:'short',
+  q:'Forward 컨버터의 D₃ 다이오드에 걸리는 전압은?',
+  a:'Vs + V₁',
+  exp:'노트 기준 답. 리셋 구간에 입력 전압과 권선 전압이 더해져 걸리는 형태로, 권선비에 따라 Vs(1 + N/N) 꼴이 된다. 기호 정의(D₁~D₃, N₁~N₃)는 수업 회로도 기준으로 확인할 것.'},
+
+ {n:19, type:'ox',
+  exp:'Flyback ↔ Buck-Boost, Forward ↔ Buck.\nFlyback은 Buck-Boost의 인덕터를 결합 인덕터(변압기)로 바꾼 절연형, Forward는 Buck에 변압기를 넣은 절연형.',
+  variants:[
+    {q:'Flyback은 Buck-Boost와 쌍대적이다 (Buck-Boost에서 유도된 구조다).', a:'O'},
+    {q:'Forward는 Buck과 쌍대적이다 (Buck에서 유도된 구조다).', a:'O'},
+    {q:'Flyback은 Buck과 쌍대적이다 (Buck에서 유도된 구조다).', a:'X'},
+    {q:'Forward는 Buck-Boost와 쌍대적이다 (Buck-Boost에서 유도된 구조다).', a:'X'}
+  ]},
+
+ {n:20, type:'essay',
+  q:'Forward에서 D(1 + N₁/N₃) ≤ 1 조건 (N₁=N₃이면 D < 0.5)을 못 맞추면 어떻게 되나?',
+  a:'코어 리셋 실패 → 자화전류에 DC offset이 매 주기 누적 → 변압기 포화.\n포화된 상태에서 스위치가 켜지면 전류가 폭주해 소자가 터질 수 있다.',
+  exp:'리셋 권선(N₃)이 자화 에너지를 입력으로 되돌릴 시간이 부족해지는 것. volt-second 균형이 깨지는 게 본질이다.'},
+
+ {n:21, type:'short',
+  q:'Push-pull에서 스위치의 최대 전압 스트레스는?',
+  a:'2Vs',
+  exp:'한쪽 스위치 도통 시 변압기 결합 때문에 반대편 스위치에는 입력 전압의 2배가 걸린다. (실제로는 누설로 인한 스파이크까지 더 얹힘)'},
+
+ {n:22, type:'essay',
+  q:'Push-pull에서 두 스위치의 Duty가 대칭이 아니면 어떻게 되나?',
+  a:'volt-second 불평형(직류 성분)이 생겨 자화 인덕턴스 Lm에 에너지가 한쪽 방향으로 누적된다.\n→ 변압기 포화, 에너지를 돌려보내지 못하고 과전류로 소자가 터질 수 있다.',
+  exp:'그래서 push-pull은 전류모드 제어나 직렬 캐패시터 같은 flux balancing 대책이 같이 따라다닌다.'},
+
+ {n:23, type:'essay',
+  q:'Push-pull은 변압기의 Lm(자화) 전류를 어떻게 처리하나?',
+  a:'두 스위치가 모두 꺼진 구간에 2차측 다이오드 2개가 함께 도통(프리휠)하면서 자화전류를 부하 측으로 흘려보내고, 이를 통해 코어가 리셋된다.',
+  exp:'자화 에너지가 갇히지 않고 처리되는 경로가 있다는 점이 forward(리셋 권선 필요)와의 차이.'},
+
+ {n:24, type:'ox',
+  exp:'자화전류는 작은 게 좋고, 줄이려면 자화 인덕턴스 Lm이 커야 한다. (Lm↑ → i_m↓ → 코어 포화 여유·손실 측면에서 유리)',
+  variants:[
+    {q:'자화전류는 보통 작은 게 좋다.', a:'O'},
+    {q:'자화전류는 보통 큰 게 좋다.', a:'X'},
+    {q:'자화전류를 줄이려면 자화 인덕턴스 Lm을 키워야 한다.', a:'O'},
+    {q:'자화전류를 줄이려면 자화 인덕턴스 Lm을 줄여야 한다.', a:'X'}
+  ]}
+];
+
+const TYPE_LABEL = {ox:'OX', short:'단답형', essay:'서술형'};
+const card = document.getElementById('card');
+const counter = document.getElementById('counter');
+const progress = document.getElementById('progress');
+
+let deck = [], idx = 0, shuffleOn = true, expandedMode = false;
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+/* ── start screen ── */
+function showStart(){
+  counter.textContent=''; progress.style.width='0%';
+  const c = {ox:0,short:0,essay:0};
+  QUESTIONS.forEach(q=>c[q.type]++);
+  const vTotal = QUESTIONS.filter(q=>q.type==='ox').reduce((s,q)=>s+q.variants.length,0);
+  card.innerHTML = `
+    <div class="center">
+      <div class="startTitle">컨버터 시험 대비 퀴즈</div>
+      <div class="startSub">OX ${c.ox} · 단답 ${c.short} · 서술 ${c.essay} — 총 ${QUESTIONS.length}문제<br>교수님이 언급한 문제 모음 기반</div>
+    </div>
+    <div class="modeGrid">
+      <button class="modeBtn" data-mode="all">전체 풀기 <small>${QUESTIONS.length}문제 · OX는 변형 랜덤 1개</small></button>
+      <button class="modeBtn" data-mode="ox">OX 랜덤 <small>${c.ox}문제 · 문제당 변형 1개</small></button>
+      <button class="modeBtn" data-mode="oxall">OX 전부 <small>${vTotal}문제 · 모든 변형 1회씩</small></button>
+      <button class="modeBtn" data-mode="sa">단답·서술만 <small>${c.short+c.essay}문제</small></button>
+    </div>
+    <div class="toggleRow">
+      <input type="checkbox" id="shuf" ${shuffleOn?'checked':''}>
+      <label for="shuf">문제 순서 섞기</label>
+    </div>
+    <div class="note">랜덤 모드: 문제당 변형 1개가 무작위 출제 · OX 전부: 모든 변형을 1회씩 다 봄<br>(O가 답인 버전 / X가 답인 버전 섞여 있음)</div>`;
+  card.querySelectorAll('.modeBtn').forEach(b=>{
+    b.onclick=()=>{
+      shuffleOn = card.querySelector('#shuf').checked;
+      const m=b.dataset.mode;
+      if(m==='oxall'){ startQuiz(QUESTIONS.filter(q=>q.type==='ox'), true); return; }
+      let qs = m==='all'?[...QUESTIONS]
+             : m==='ox'?QUESTIONS.filter(q=>q.type==='ox')
+             : QUESTIONS.filter(q=>q.type!=='ox');
+      startQuiz(qs, false);
+    };
+  });
+}
+
+/* 라운드 시작
+   expandAll=false: OX는 변형 중 랜덤 1개, 문제당 1회 출제
+   expandAll=true : OX의 모든 변형을 각각 1회씩 전부 출제 */
+function startQuiz(qs, expandAll=false){
+  expandedMode = !!expandAll;
+  if(expandAll){
+    deck = qs.flatMap(src => src.variants.map(v=>({
+      n:src.n, type:'ox',
+      q:v.q, a:v.a,
+      exp:(v.exp||src.exp), flag:src.flag||null,
+      state:{done:false, pick:null, right:null}
+    })));
+  } else {
+    deck = qs.map(src=>{
+      const v = (src.type==='ox' && src.variants) ? pick(src.variants) : null;
+      return {
+        n:src.n, type:src.type,
+        q: v ? v.q : src.q,
+        a: v ? v.a : src.a,
+        exp: (v && v.exp) ? v.exp : src.exp,
+        flag: src.flag || null,
+        state:{done:false, pick:null, right:null}   // right: true/false (단답·서술은 자가채점 결과)
+      };
+    });
+  }
+  if(shuffleOn) shuffle(deck);
+  idx=0;
+  render();
+}
+
+/* ── render ── */
+function render(){
+  if(idx>=deck.length){ showResult(); return; }
+  const item = deck[idx];
+  counter.textContent = `${idx+1} / ${deck.length}`;
+  progress.style.width = `${(idx/deck.length)*100}%`;
+
+  const backBtn = idx>0 ? `<button class="backTop" id="back">← 이전</button>` : '';
+  const head = `
+    <div class="meta">
+      <span class="badge ${item.type}">${TYPE_LABEL[item.type]}</span>
+      <span class="qno">문제 ${item.n}</span>
+      ${backBtn}
+    </div>
+    <div class="qtext">${esc(item.q)}</div>`;
+
+  if(item.state.done){
+    renderAnswered(item, head);
+  } else if(item.type==='ox'){
+    card.innerHTML = head + `
+      <div id="body">
+        <div class="oxrow">
+          <button class="oxbtn o" data-pick="O" aria-label="O 맞다">O</button>
+          <button class="oxbtn x" data-pick="X" aria-label="X 틀리다">X</button>
+        </div>
+        <div class="hint">키보드: O / X · ← 이전</div>
+      </div>`;
+    card.querySelectorAll('.oxbtn').forEach(b=> b.onclick=()=>answerOX(item, b.dataset.pick));
+  } else {
+    card.innerHTML = head + `
+      <div id="body">
+        <button class="btn btn-primary" id="reveal" style="width:100%">정답 보기</button>
+        <div class="hint">키보드: Space · ← 이전</div>
+      </div>`;
+    card.querySelector('#reveal').onclick=()=>reveal(item);
+  }
+  bindBack();
+}
+
+function bindBack(){
+  const b=card.querySelector('#back');
+  if(b) b.onclick=()=>{ idx--; render(); };
+}
+
+function answerBoxHTML(item){
+  return `
+    <div class="answerBox">
+      <div class="label">정답</div>
+      <div class="ans">${esc(item.a)}</div>
+      <div class="exp">${esc(item.exp||'')}</div>
+      ${item.flag?`<div class="flag">${esc(item.flag)}</div>`:''}
+    </div>`;
+}
+
+function navHTML(){
+  return `<div class="navRow"><button class="btn btn-primary" id="next">다음 (Enter)</button></div>`;
+}
+
+/* 이미 푼 문제로 돌아왔을 때: 채점 결과 보존된 상태로 표시 */
+function renderAnswered(item, head){
+  if(item.type==='ox'){
+    const p=item.state.pick, r=item.state.right;
+    card.innerHTML = head + `
+      <div id="body">
+        <div class="oxrow">
+          <button class="oxbtn o ${p==='O'?(r?'picked-right':'picked-wrong'):'dim'}" disabled>O</button>
+          <button class="oxbtn x ${p==='X'?(r?'picked-right':'picked-wrong'):'dim'}" disabled>X</button>
+        </div>
+        <div class="verdict ${r?'right':'wrong'}">${r?'✓ 정답':'✗ 오답 — 정답은 '+item.a} <span style="font-weight:500;color:var(--sub)">(내 답: ${p})</span></div>
+        ${answerBoxHTML(item)}
+        ${navHTML()}
+      </div>`;
+  } else {
+    const r=item.state.right;
+    card.innerHTML = head + `
+      <div id="body">
+        ${answerBoxHTML(item)}
+        <div class="myGrade ${r?'right':'wrong'}">자가채점: ${r?'맞췄다 ✓':'틀렸다 ✗'}</div>
+        ${navHTML()}
+      </div>`;
+  }
+  card.querySelector('#next').onclick=next;
+}
+
+function answerOX(item, p){
+  const right = p===item.a;
+  item.state = {done:true, pick:p, right};
+  card.querySelectorAll('.oxbtn').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.pick===p) b.classList.add(right?'picked-right':'picked-wrong');
+    else b.classList.add('dim');
+  });
+  card.querySelector('.hint')?.remove();
+  const body=card.querySelector('#body');
+  body.insertAdjacentHTML('beforeend', `
+    <div class="verdict ${right?'right':'wrong'}">${right?'✓ 정답':'✗ 오답 — 정답은 '+item.a}</div>
+    ${answerBoxHTML(item)}
+    ${navHTML()}`);
+  card.querySelector('#next').onclick=next;
+  card.querySelector('#next').focus();
+}
+
+function reveal(item){
+  const body=card.querySelector('#body');
+  body.innerHTML = `
+    ${answerBoxHTML(item)}
+    <div class="gradeRow">
+      <button class="btn btn-ok" id="gOk">맞췄다 ✓</button>
+      <button class="btn btn-no" id="gNo">틀렸다 ✗</button>
+    </div>
+    <div class="hint">스스로 채점 — 키보드: O / X</div>`;
+  body.querySelector('#gOk').onclick=()=>{ item.state={done:true,pick:null,right:true}; next(); };
+  body.querySelector('#gNo').onclick=()=>{ item.state={done:true,pick:null,right:false}; next(); };
+}
+
+function next(){ idx++; render(); }
+
+/* ── result ── */
+function showResult(){
+  counter.textContent=''; progress.style.width='100%';
+  const score = deck.filter(d=>d.state.right===true).length;
+  const wrong = deck.filter(d=>d.state.right===false);
+  const pct = Math.round(score/deck.length*100);
+  const msg = pct===100?'완벽함 ㄹㅇ 시험장 가도 됨'
+            : pct>=80?'거의 다 잡았다. 틀린 것만 한 번 더 돌리면 끝.'
+            : pct>=50?'뼈대는 잡혔는데 구멍이 좀 있음. 오답 위주로 다시.'
+            : '아직 초반. 해설 읽으면서 한 바퀴 더 돌자.';
+  card.innerHTML = `
+    <div class="center">
+      <div class="scoreBig">${score}<small> / ${deck.length}</small></div>
+      <div class="resultMsg">${pct}% — ${msg}</div>
+    </div>
+    ${wrong.length?`<ul class="wrongList">${wrong.map(d=>`<li><b>문제 ${d.n}</b>${esc(d.q.split('\n')[0])}</li>`).join('')}</ul>`:''}
+    <div class="resultBtns">
+      ${wrong.length?`<button class="btn btn-primary" id="retry">틀린 문제만 다시 (${wrong.length})${expandedMode?'':' — 변형 재추첨'}</button>`:''}
+      <button class="btn btn-ghost" id="home">처음으로</button>
+    </div>`;
+  if(wrong.length){
+    card.querySelector('#retry').onclick=()=>{
+      if(expandedMode){
+        // 틀린 변형 문장 그대로 재출제
+        deck = wrong.map(d=>({...d, state:{done:false, pick:null, right:null}}));
+        if(shuffleOn) shuffle(deck);
+        idx=0; render();
+      } else {
+        // 원본 문제 객체로 되돌려서 변형을 새로 랜덤 추첨
+        const srcs = wrong.map(d=>QUESTIONS.find(Q=>Q.n===d.n));
+        startQuiz(srcs, false);
+      }
+    };
+  }
+  card.querySelector('#home').onclick=showStart;
+}
+
+/* ── keyboard ── */
+document.addEventListener('keydown', e=>{
+  const k=e.key;
+  if(k==='ArrowLeft'){ const b=card.querySelector('#back'); if(b){e.preventDefault(); b.click();} return; }
+  if(k==='Enter' || k==='ArrowRight'){ const n=card.querySelector('#next'); if(n){e.preventDefault(); n.click();} return; }
+  if(k===' '){ const r=card.querySelector('#reveal'); if(r){e.preventDefault(); r.click();} return; }
+  const lk=k.toLowerCase();
+  if(lk==='o'){
+    const b=card.querySelector('.oxbtn.o:not(:disabled)'); if(b){b.click(); return;}
+    const g=card.querySelector('#gOk'); if(g) g.click();
+  }
+  if(lk==='x'){
+    const b=card.querySelector('.oxbtn.x:not(:disabled)'); if(b){b.click(); return;}
+    const g=card.querySelector('#gNo'); if(g) g.click();
+  }
+});
+
+showStart();
+</script>
+</body>
+</html>
